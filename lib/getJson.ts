@@ -1,24 +1,53 @@
-const httpClient = async (url: string, timeoutMs: number, scenario: string) => {
+const httpClient = async (url: string, method: MethodType) => {
   try {
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-    return res;
-  } catch (err) {
-    makeAppError({
-      type: "Network",
-      message: err.message,
-      url,
-      method: "GET",
-      status: err.status,
-      scenario,
-      durationMs: 0,
-      retryAfterSec: 0,
+    const response = await fetch(url, { method: method });
+    if (!response.ok) {
+      const errorType = mapStatusToErrorType(response.status);
+      const errorMessage = await response.json();
+      throw makeAppError({
+        type: errorType,
+        method: method,
+        message: errorMessage.error?.message ?? `HTTP ${response.status}`,
+        status: response.status,
+        url: url,
+      });
+    }
+    return response.json();
+  } catch (error) {
+    if (isAppError(error)) {
+      throw error;
+    }
+    if (error instanceof SyntaxError) {
+      throw makeAppError({
+        type: "Parse",
+        message: error.message,
+        url: url,
+        method: method,
+      });
+    }
+    if (error instanceof TypeError) {
+      throw makeAppError({
+        type: "Network",
+        message: error.message,
+        url: url,
+        method: method,
+      });
+    }
+    throw makeAppError({
+      type: "Unknown",
+      message: "Unknown error",
+      url: url,
+      method: method,
     });
   }
 };
 
-export default httpClient;
+const isAppError = (error: unknown): error is AppError => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "type" in error &&
+    "message" in error &&
+    "timestamp" in error
+  );
+};

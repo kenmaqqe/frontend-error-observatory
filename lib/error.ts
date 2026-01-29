@@ -23,7 +23,7 @@ type AppErrorType =
 
 type MethodType = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
-const makeAppError = ({
+export const makeAppError = ({
   type,
   message,
   url,
@@ -56,7 +56,7 @@ const makeAppError = ({
   };
 };
 
-const mapStatusToErrorType = (status?: number) => {
+export const mapStatusToErrorType = (status?: number) => {
   if (typeof status === "number" && status >= 500 && status < 600) {
     return "Server";
   }

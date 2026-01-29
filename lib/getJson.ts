@@ -1,4 +1,8 @@
-const httpClient = async (
+import { makeAppError, mapStatusToErrorType } from "./error";
+
+type MethodType = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+
+export const httpClient = async (
   url: string,
   method: MethodType,
   options?: { timeoutMs?: number; scenario?: string },
@@ -31,7 +35,6 @@ const httpClient = async (
             retryAfterSec = n;
           }
         }
-
         const durationMs = durationMsFunctions(startedAt);
         throw makeAppError({
           type: "RateLimit",
@@ -45,7 +48,7 @@ const httpClient = async (
         });
       }
       const errorType = mapStatusToErrorType(response.status);
-      const errorMessage = await response.json();
+      const errorMessage = response.json();
       const durationMs = durationMsFunctions(startedAt);
       throw makeAppError({
         type: errorType,
@@ -105,7 +108,7 @@ const httpClient = async (
   }
 };
 
-const isAppError = (error: unknown): error is AppError => {
+export const isAppError = (error: unknown): error is AppError => {
   return (
     typeof error === "object" &&
     error !== null &&

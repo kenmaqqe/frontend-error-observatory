@@ -1,51 +1,63 @@
 "use client";
 
-import { useEffect } from "react";
-import { httpClient, isAppError } from "../../lib/getJson";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { httpClient, isAppError } from "@/lib/getJson";
+import { useInboxStore } from "@/lib/store/inboxStore";
 
-const scenarios = [
-  "ok",
-  "unauthorized_401",
-  "forbidden_403",
-  "server_error_500",
-  "rate_limit_429",
-  "invalid_json",
-  "slow_200",
+const items = [
+  { label: "OK", value: "ok" },
+  { label: "Unauthorized 401", value: "unauthorized_401" },
+  { label: "Forbidden 403", value: "forbidden_403" },
+  { label: "Server Error 500", value: "server_error_500" },
+  { label: "Rate Limit 429", value: "rate_limit_429" },
+  { label: "Invalid JSON", value: "invalid_json" },
+  { label: "Slow 200", value: "slow_200" },
 ];
 
-export default function RunnerPage() {
-  useEffect(() => {
-    const runScenario = async (scenario: string) => {
-      try {
-        const data = await httpClient(`/api/mock?scenario=${scenario}`, "GET", {
-          timeoutMs: 1000,
-          scenario,
-        });
-        console.log(`✅ [${scenario}] OK`, data);
-      } catch (e) {
-        if (isAppError(e)) {
-          console.log(`❌ [${scenario}] AppError`, e);
-        } else {
-          console.error(`💥 [${scenario}] NOT AppError`, e);
-        }
-      }
-    };
+const Page = () => {
+  const [value, setValue] = useState("ok");
+  const add = useInboxStore((state) => state.add);
 
-    // запускаємо по черзі з невеликою паузою
-    const runAll = async () => {
-      for (const scenario of scenarios) {
-        await runScenario(scenario);
-        await new Promise((r) => setTimeout(r, 500));
-      }
-    };
-
-    runAll();
-  }, []);
-
+  const runnerFunction = async () => {
+    try {
+      const res = await httpClient(`/api/mock?scenario=${value}`, "GET");
+      return res.data;
+    } catch (error) {
+      if (isAppError(error)) add(error);
+    }
+  };
   return (
-    <div style={{ padding: 24 }}>
+    <div>
       <h1>Runner</h1>
-      <p>Open console to see results</p>
+      <p>Chose scenario:</p>
+      <Select defaultValue={value} onValueChange={(value) => setValue(value)}>
+        <SelectTrigger className="w-full max-w-48">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Scenarios</SelectLabel>
+            {items.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      <Button onClick={() => runnerFunction()}>Run</Button>
     </div>
   );
-}
+};
+
+export default Page;

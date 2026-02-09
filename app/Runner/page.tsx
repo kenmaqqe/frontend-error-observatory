@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { httpClient, isAppError } from "@/lib/getJson";
 import { useInboxStore } from "@/lib/store/inboxStore";
+import {toast} from 'sonner'
 
 const items = [
   { label: "OK", value: "ok" },
@@ -35,6 +37,7 @@ const items = [
 
 const Page = () => {
   const [value, setValue] = useState("ok");
+  const router = useRouter();
   const add = useInboxStore((state) => state.add);
 
   const runnerFunction = async () => {
@@ -42,7 +45,14 @@ const Page = () => {
       const res = await httpClient(`/api/mock?scenario=${value}`, "GET");
       return res.data;
     } catch (error) {
-      if (isAppError(error)) add(error);
+      if (isAppError(error)) {
+        add(error) 
+        toast.error("Error was handled", {position: "top-center", action: {
+          label: "See in inbox",
+          onClick: ()=> router.push('/Inbox')
+        }})
+      };
+
     }
   };
 

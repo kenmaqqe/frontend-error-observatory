@@ -23,7 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { httpClient, isAppError } from "@/lib/getJson";
 import { useInboxStore } from "@/lib/store/inboxStore";
-import {toast} from 'sonner'
+import { toast } from "sonner";
 
 const items = [
   { label: "OK", value: "ok" },
@@ -46,13 +46,17 @@ const Page = () => {
       return res.data;
     } catch (error) {
       if (isAppError(error)) {
-        add(error) 
-        toast.error("Error was handled", {position: "top-center", action: {
-          label: "See in inbox",
-          onClick: ()=> router.push('/Inbox')
-        }})
-      };
-
+        add(error);
+        toast.error("Event captured", {
+          description: `${error.type}${error.status ? ` • HTTP ${error.status}` : ""} • ${activeLabel}`,
+          position: "top-center",
+          duration: 4500,
+          action: {
+            label: "Open Inbox",
+            onClick: () => router.push("/Inbox"),
+          },
+        });
+      }
     }
   };
 

@@ -48,12 +48,12 @@ export const httpClient = async (
         });
       }
       const errorType = mapStatusToErrorType(response.status);
-      const errorMessage = response.json();
+      const errorMessage = await response.json();
       const durationMs = durationMsFunctions(startedAt);
       throw makeAppError({
         type: errorType,
         method: method,
-        message: errorMessage.error?.message ?? `HTTP ${response.status}`,
+        message: errorMessage.error.message ?? `HTTP ${response.status}`,
         status: response.status,
         url: url,
         scenario: options?.scenario,

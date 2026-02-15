@@ -14,11 +14,11 @@ import { useInboxStore } from "@/lib/store/inboxStore";
 
 export default function Page() {
   const events = useInboxStore((state) => state.events);
+  const clearAll = useInboxStore((state) => state.clear)
 
   return (
     <div className="min-h-[calc(100vh-1px)] bg-background">
       <div className="mx-auto w-full max-w-5xl px-6 py-8">
-        {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <h1 className="scroll-m-20 text-3xl font-extrabold tracking-tight">
@@ -30,12 +30,11 @@ export default function Page() {
             </p>
           </div>
 
-          <Button variant="outline">Clear all</Button>
+          <Button variant="outline" onClick={clearAll}>Clear all</Button>
         </div>
 
         <Separator className="my-6" />
 
-        {/* Content */}
         {events.length > 0 ? (
           <div className="space-y-3">
             {events.map((event) => (

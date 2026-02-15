@@ -101,10 +101,21 @@ export const httpClient = async (
       });
     }
 
-    if (error instanceof TypeError) {
+    const isTypeError =
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error as any).name === "TypeError";
+
+    if (isTypeError) {
+      const message =
+        typeof error === "object" && error !== null && "message" in error
+          ? String((error as any).message)
+          : "Network error";
+
       throw makeAppError({
         type: "Network",
-        message: error.message,
+        message,
         url,
         method,
         durationMs: durationMs(startedAt),

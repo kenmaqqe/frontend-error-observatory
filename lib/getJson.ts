@@ -18,90 +18,105 @@ export const httpClient = async (
 
   try {
     const response = await fetch(url, {
-      method: method,
+      method,
       signal: controller.signal,
     });
+
     if (!response.ok) {
       if (response.status === 429) {
-        let retryAfterSec: number | undefined;
         const ra = response.headers.get("Retry-After");
-        if (ra === null) {
-          retryAfterSec = undefined;
-        } else {
-          const n = Number(ra);
-          if (Number.isNaN(n)) {
-            retryAfterSec = undefined;
-          } else {
-            retryAfterSec = n;
-          }
-        }
-        const durationMs = durationMsFunctions(startedAt);
+        const retryAfterSec =
+          ra !== null && !Number.isNaN(Number(ra)) ? Number(ra) : undefined;
+
         throw makeAppError({
           type: "RateLimit",
-          method: method,
+          method,
           message: "Rate limit exceeded",
           status: response.status,
-          url: url,
+          url,
           scenario: options?.scenario,
-          durationMs: durationMs,
-          retryAfterSec: retryAfterSec,
+          durationMs: durationMs(startedAt),
+          retryAfterSec,
         });
       }
-      const errorType = mapStatusToErrorType(response.status);
-      const errorMessage = await response.json();
-      const durationMs = durationMsFunctions(startedAt);
+
+      let body: any = null;
+      try {
+        body = await response.json();
+      } catch {
+        body = null;
+      }
+
       throw makeAppError({
-        type: errorType,
-        method: method,
-        message: errorMessage.error.message ?? `HTTP ${response.status}`,
+        type: mapStatusToErrorType(response.status),
+        method,
+        message: body?.error?.message ?? `HTTP ${response.status}`,
         status: response.status,
-        url: url,
+        url,
         scenario: options?.scenario,
-        durationMs: durationMs,
+        durationMs: durationMs(startedAt),
       });
     }
+
     return await response.json();
-  } catch (error) {
+  } catch (error: unknown) {
     if (isAppError(error)) {
       throw error;
     }
-    if (error instanceof DOMException && error.name === "AbortError") {
-      const durationMs = durationMsFunctions(startedAt);
+
+    const isAbortError =
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error as any).name === "AbortError";
+
+    if (isAbortError) {
       throw makeAppError({
         type: "Timeout",
-        message: error.message,
-        url: url,
-        method: method,
-        durationMs: durationMs,
+        message: "Request aborted (timeout)",
+        url,
+        method,
+        durationMs: durationMs(startedAt),
       });
     }
-    if (error instanceof SyntaxError) {
-      const durationMs = durationMsFunctions(startedAt);
+
+    const isSyntaxError =
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      (error as any).name === "SyntaxError";
+
+    if (isSyntaxError) {
+      const message =
+        typeof error === "object" && error !== null && "message" in error
+          ? String((error as any).message)
+          : "Failed to parse JSON";
+
       throw makeAppError({
         type: "Parse",
-        message: error.message,
-        url: url,
-        method: method,
-        durationMs: durationMs,
+        message,
+        url,
+        method,
+        durationMs: durationMs(startedAt),
       });
     }
+
     if (error instanceof TypeError) {
-      const durationMs = durationMsFunctions(startedAt);
       throw makeAppError({
         type: "Network",
         message: error.message,
-        url: url,
-        method: method,
-        durationMs: durationMs,
+        url,
+        method,
+        durationMs: durationMs(startedAt),
       });
     }
-    const durationMs = durationMsFunctions(startedAt);
+
     throw makeAppError({
       type: "Unknown",
       message: "Unknown error",
-      url: url,
-      method: method,
-      durationMs: durationMs,
+      url,
+      method,
+      durationMs: durationMs(startedAt),
     });
   } finally {
     if (timeoutId !== undefined) clearTimeout(timeoutId);
@@ -118,6 +133,5 @@ export const isAppError = (error: unknown): error is AppError => {
   );
 };
 
-const durationMsFunctions = (startedAt: number) => {
-  return Math.round(performance.now() - startedAt);
-};
+const durationMs = (startedAt: number) =>
+  Math.round(performance.now() - startedAt);

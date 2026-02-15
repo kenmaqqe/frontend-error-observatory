@@ -1,4 +1,4 @@
-import { makeAppError, mapStatusToErrorType } from "./error";
+import { makeAppError, mapStatusToErrorType, AppError } from "./error";
 
 type MethodType = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 

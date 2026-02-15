@@ -1,4 +1,4 @@
-interface AppError {
+export interface AppError {
   id: string;
   type: AppErrorType;
   message: string;

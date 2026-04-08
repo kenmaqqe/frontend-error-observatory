@@ -35,10 +35,19 @@ export async function GET(req: Request) {
   // 500
   if (scenario === "server_error_500") {
     return NextResponse.json(
-      { error: { code: "SERVER_ERROR", message: "Unexpected error" } },
+      { error: { code: "SERVER_ERROR", message: "Unexpected database error" } },
       { status: 500 },
     );
   }
+
+  // 503
+  if (scenario === "server_error_503") {
+    return NextResponse.json(
+      { error: { code: "SERVICE_UNAVAILABLE", message: "Server is under maintenance" } },
+      { status: 503 },
+    );
+  }
+
 
   // 429
   if (scenario === "rate_limit_429") {
@@ -73,6 +82,14 @@ export async function GET(req: Request) {
     });
   }
 
+  // Timeout
+  if (scenario === "timeout") {
+    await sleep(10000); // Simulate context timeout or slow backend
+    return NextResponse.json({
+        error: { code: "TIMEOUT", message: "Response timed out" }
+    }, { status: 408 });
+  }
+
   // Empty
   if (scenario === "empty_200") {
     return NextResponse.json({
@@ -80,6 +97,7 @@ export async function GET(req: Request) {
       meta: { scenario },
     });
   }
+
 
   return NextResponse.json(
     { error: { code: "UNKNOWN_SCENARIO", message: scenario } },

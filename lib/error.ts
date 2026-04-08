@@ -9,6 +9,7 @@ export interface AppError {
   scenario?: string;
   durationMs?: number;
   retryAfterSec?: number;
+  fingerprint: string;
 }
 
 type AppErrorType =

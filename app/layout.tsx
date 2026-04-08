@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/Sedibar/Sidebar";
+import { Sidebar } from "@/components/Sidebar/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +31,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex`}
       >
-        <Sidebar />
-        <main className="min-h-dvh flex-1 bg-background">{children}</main>
-        <Toaster/>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Sidebar />
+          <main className="min-h-dvh flex-1 bg-background">{children}</main>
+          <Toaster />
+        </ThemeProvider>
+
       </body>
     </html>
   );

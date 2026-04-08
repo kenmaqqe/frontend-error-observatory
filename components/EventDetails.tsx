@@ -90,7 +90,7 @@ export function EventDetails({ event, open, onOpenChange }: EventDetailsProps) {
               <div className="rounded-lg border bg-muted/30 p-4">
                 <JsonView
                   data={event}
-                  shouldInitiallyExpand={() => true}
+                  shouldExpandNode={() => true}
                   style={theme === "dark" ? darkStyles : defaultStyles}
                 />
               </div>
